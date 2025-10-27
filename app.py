@@ -1,4 +1,5 @@
 import streamlit as st
+import numpy_financial as npf
 from utils.calculations import *
 from utils.visualization import *
 
@@ -51,6 +52,10 @@ NPV_solar=PV_solar-I0
 #Future value of FD
 FV_FD_real = (I0 * (1 + r/100)**N) / (1 + i/100)**N
 
+cashflows = [-I0] + [E0 * 12 * ((1 + g / 100) ** (t - 1)) for t in range(1, years + 1)]
+irr=npf.irr(cashflows)
+
+
 tab1, tab2 = st.tabs(["Overview", "Financial Analysis"])
 
 with tab1:
@@ -71,10 +76,11 @@ with tab2:
     c2.metric("Annual Savings",f"{annual_benefit:,.2f}")
     c3.metric("Payback Period (Years)", f"{payback:.2f}")
     
-    c1,c2,c3=st.columns(3)
+    c1,c2,c3,c4=st.columns(4)
     c1.metric("PV of solar savings",f"{PV_solar:,.2f}")
     c2.metric("NPV of solar",f"{NPV_solar:,.2f}")
     c3.metric("FD real return",f"{r_real*100:,.2f}%")
+    c4.metric("Solar real return",f"{irr*100:,.2f}%")
     if(NPV_solar>0):
         st.success("Solar beats FD in real terms")
     st.markdown("**Subsidy Impact Analysis**")
