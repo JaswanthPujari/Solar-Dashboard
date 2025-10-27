@@ -15,10 +15,13 @@ st.sidebar.header("Electricity Details")
 rate = st.sidebar.number_input("Electricity Rate (Rs/unit)", 1.0, 20.0, 5.9)
 consumption = st.sidebar.number_input("Monthly Consumption (Units)", 0, 10000, 300)
 excess_rate = st.sidebar.number_input("Excess Sale Rate (Rs/unit)", 0.0, 20.0, 2.95)
+g=st.sidebar.slider("Annual inflation in electricity cost (%)",0.0,10.0,6.0,step=0.5)
+
 #Sidebar3
 st.sidebar.header("Financial Parameters")
 subsidy = st.sidebar.slider("Subsidy Percentage (%)", 0, 70, 40, step=5)
 fd_rate = st.sidebar.slider("FD Interest Rate (%)", 3.0, 10.0, 6.0, step=0.5)
+i=st.sidebar.slider("Annual general inflation rate (%)",0.0,10.0,5.0,step=0.5)
 years = st.sidebar.slider("Analysis Period (Years)", 10, 30, 25, step=5)
 
 
@@ -33,7 +36,20 @@ payback = calculate_payback_period(net_investment, annual_benefit)
 total_savings, net_profit, roi = calculate_long_term_returns(annual_benefit, years, net_investment)
 fd_maturity, fd_interest = calculate_fd_returns(net_investment, fd_rate, years)
 solar_advantage = net_profit - fd_interest
+E0=rate*consumption
+I0=net_investment
+N=years
+r=fd_rate
+#real return
+r_real = (1 + r/100) / (1 + i/100) - 1
 
+g=g/100
+
+PV_solar = sum((E0*12*(1+g)**(t-1)) /(1+r_real)**t for t in range(1, N+1))
+
+NPV_solar=PV_solar-I0
+#Future value of FD
+FV_FD_real = (I0 * (1 + r/100)**N) / (1 + i/100)**N
 
 tab1, tab2 = st.tabs(["Overview", "Financial Analysis"])
 
@@ -54,7 +70,13 @@ with tab2:
     c1.metric("Net Investment (Rs)", f"{net_investment:,.2f}")
     c2.metric("Annual Savings",f"{annual_benefit:,.2f}")
     c3.metric("Payback Period (Years)", f"{payback:.2f}")
- 
+    
+    c1,c2,c3=st.columns(3)
+    c1.metric("PV of solar savings",f"{PV_solar:,.2f}")
+    c2.metric("NPV of solar",f"{NPV_solar:,.2f}")
+    c3.metric("FD real return",f"{r_real*100:,.2f}%")
+    if(NPV_solar>0):
+        st.success("Solar beats FD in real terms")
     st.markdown("**Subsidy Impact Analysis**")
     subsidy_levels = [0, 20, 30, 40, 50]
     rows=[]
